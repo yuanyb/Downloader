@@ -74,12 +74,4 @@ public class DownloadTask extends Thread {
 
         return Channels.newChannel(conn.getInputStream());
     }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        DownloadFile file = new DownloadFile("tmp.file", 10000);
-        DownloadTask task = new DownloadTask("http://js.xiazaicc.com//down2/ucliulanqi_downcc.zip", 0, 9999, file, new AtomicBoolean());
-        task.start();
-        task.join();
-        file.close();
-    }
 }

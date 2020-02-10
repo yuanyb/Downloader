@@ -1,6 +1,5 @@
 package downloader;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
@@ -8,9 +7,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
-public class Download {
+public class Downloader {
     private static final int DEFAULT_THREAD_COUNT = 4;  // 默认线程数量
     private AtomicBoolean canceled; // 取消状态，如果有一个子线程出现异常，则取消整个下载任务
     private DownloadFile file; // 下载的文件对象
@@ -20,11 +18,11 @@ public class Download {
     private final String url;
     private long beginTime; // 开始时间
 
-    public Download(String url) {
+    public Downloader(String url) {
         this(url, DEFAULT_THREAD_COUNT);
     }
 
-    public Download(String url, int threadCount) {
+    public Downloader(String url, int threadCount) {
         this.url = url;
         this.threadCount = threadCount;
         this.canceled = new AtomicBoolean(false);
@@ -129,7 +127,7 @@ public class Download {
     }
 
     public static void main(String[] args) throws IOException {
-        new download.Download("http://js.xiazaicc.com//down2/ucliulanqi_downcc.zip").start();
+        new Downloader("http://js.xiazaicc.com//down2/ucliulanqi_downcc.zip").start();
     }
 }
 
