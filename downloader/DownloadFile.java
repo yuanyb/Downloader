@@ -4,15 +4,17 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class DownloadFile {
+class DownloadFile {
     private final RandomAccessFile file;
     private final FileChannel channel; // 线程安全类
-    private AtomicInteger wroteSize; // 已写入的长度
+    private AtomicLong wroteSize; // 已写入的长度
+    private Logger logger;
 
-    public DownloadFile(String fileName, long fileSize) throws IOException {
-        this.wroteSize = new AtomicInteger(0);
+    DownloadFile(String fileName, long fileSize, Logger logger) throws IOException {
+        this.wroteSize = new AtomicLong(0);
+        this.logger = logger;
         this.file = new RandomAccessFile(fileName, "rw");
         file.setLength(fileSize);
         channel = file.getChannel();
@@ -22,33 +24,31 @@ public class DownloadFile {
      * 写数据
      * @param offset 写偏移量
      * @param buffer 数据
-     * @throws IOException
+     * @throws IOException 写数据出现异常
      */
-    public void write(long offset, ByteBuffer buffer) throws IOException {
+    void write(long offset, ByteBuffer buffer, int threadID, long upperBound) throws IOException {
         buffer.flip();
         int length = buffer.limit();
         while (buffer.hasRemaining()) {
             channel.write(buffer, offset);
         }
         wroteSize.addAndGet(length);
-    }
-
-    private void log() {
-        // todo 断点续传
+        logger.updateLog(threadID, length, offset + length, upperBound); // 更新日志
     }
 
     /**
-     * 获得已经下载的数据量，为了直到何时结束整个任务，以及统计信息
-     * @return
+     * @return 已经下载的数据量，为了知道何时结束整个任务，以及统计信息
      */
-    public long getWroteSize() {
+    long getWroteSize() {
         return wroteSize.get();
     }
 
-    /**
-     * 关闭文件
-     */
-    public void close() {
+    // 继续下载时调用
+    void setWroteSize(long wroteSize) {
+        this.wroteSize.set(wroteSize);
+    }
+
+    void close() {
         try {
             file.close();
         } catch (IOException e) {
